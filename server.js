@@ -3,11 +3,12 @@ const multer=require("multer");
 const fs=require("fs");
 const cors=require("cors");
 const pdfParse=require("pdf-parse");
+const path=require('path');
 const textToSpeech=require("@google-cloud/text-to-speech");
 const util=require("util");
 
 const app=express();
-app.use(cors());
+app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 app.use(express.static("public"));
 app.use(express.urlencoded({extended:true}));
@@ -23,6 +24,7 @@ const audioDir = "public/audio";
 if (!fs.existsSync(audioDir)) {
     fs.mkdirSync(audioDir, { recursive: true }); 
 }
+
 
 app.post("/upload",upload.single("pdf"),async (req,res)=>{  
     try {
@@ -46,7 +48,7 @@ app.post("/upload",upload.single("pdf"),async (req,res)=>{
         const audioFilePath=`${audioDir}/${req.file.filename}.mp3`;
 
         await util.promisify(fs.writeFile)(audioFilePath,response.audioContent,"binary");
-        res.json({audioFilePath});
+        res.json({audioFilePath: `/audio/${req.file.filename}.mp3` });
     } catch(err) {
         console.error(err);
         res.status(500).send("Internal server error.");
